@@ -84,6 +84,9 @@ Sub tickerloop():
         End If
         
         'Report and save percent change
+        'If the opening price is > 0, everything runs normally
+        'Otherwise, if the open is 0, we return a percentchange of 0 to account for errors in divide by 0
+        'Instructions didn't make it clear whether we should scan for the next open price and all stocks have open > 0, except edge cases, which come across as invalid data
         If openprice > 0 Then
             percentchange = (closeprice - openprice) / openprice
             ws.Range("K" & summaryrow - 1).Value = percentchange
