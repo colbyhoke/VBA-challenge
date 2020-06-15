@@ -1,0 +1,132 @@
+Sub tickerloop():
+    '---------------------------------------------------------
+    'Loop through all worksheets
+    '---------------------------------------------------------
+    Dim ws As Worksheet
+    
+    For Each ws In Worksheets
+    
+    'Find the lastrow of the sheet for column A
+    lastrow = ws.Cells(ws.Rows.Count, "A").End(xlUp).row
+     
+     'Set all header names and bold 'em
+    ws.Range("I1").Value = "Ticker"
+    ws.Range("J1").Value = "Yearly Change"
+    ws.Range("K1").Value = "Percent Change"
+    ws.Range("L1").Value = "Total Stock Volume"
+    ws.Range("P1").Value = "Ticker"
+    ws.Range("Q1").Value = "Value"
+    ws.Range("I1:Q1").Font.Bold = True
+    ws.Range("O2").Value = "Greatest % Increase"
+    ws.Range("O3").Value = "Greatest % Decrease"
+    ws.Range("O4").Value = "Greatest Total Volume"
+    ws.Range("O2:O4").Font.Bold = True
+
+    'Set column K to percentage format, with 2 decimal places
+    ws.Range("K2:K" & lastrow).NumberFormat = "0.00%"
+    
+    'Set Q2 and Q3 to percentage format, with 2 decimal places
+    ws.Range("Q2:Q3").NumberFormat = "0.00%"
+    
+    'Set Q4 as number format
+    ws.Range("Q4").NumberFormat = "0"
+    
+    'Variables
+    Dim tickername As String
+    Dim summaryrow As Integer
+    Dim totalvolume As Double
+    Dim openprice As Double
+    Dim closeprice As Double
+    Dim percentchange As Double
+    Dim lowpercent As Double
+    Dim highpercent As Double
+    Dim greatestvol As Double
+    Dim lowticker As String
+    Dim highticker As String
+    Dim highvolticker As String
+    Dim percentrange As Range
+    Dim totalvolrange As Range
+    Dim highvoltickerrow As Integer
+    Dim lowpercentrow As Integer
+    Dim highpercentrow As Integer
+    
+    'Initialize summary row as 2, which will be used to print output starting at I2
+    summaryrow = 2
+    
+    '---------------------------------------------------------
+    'Let's loop through the data!
+    '---------------------------------------------------------
+    For i = 2 To lastrow
+        If ws.Cells(i, 1).Value <> tickername Then
+            'Compares tickername value to cell value, this method grabs and writes the first time a unique ticker value appears
+            tickername = ws.Cells(i, 1).Value
+            ws.Range("I" & summaryrow).Value = tickername
+            
+            'Since this is the first appearance, we can also grab the open price and store it
+            openprice = ws.Cells(i, 3).Value
+            
+            'Reset total volume count for every new ticker
+            totalvolume = 0 + ws.Cells(i, 7).Value
+            summaryrow = summaryrow + 1
+        Else
+            totalvolume = totalvolume + ws.Cells(i, 7).Value
+        End If
+        closeprice = ws.Cells(i, 6).Value
+        
+        'Report the yearly change
+        ws.Range("J" & summaryrow - 1).Value = closeprice - openprice
+        
+        'Add conditional formatting colors to yearly change cells
+        If ws.Range("J" & summaryrow - 1).Value < 0 Then
+            ws.Range("J" & summaryrow - 1).Interior.ColorIndex = 3
+            Else
+            ws.Range("J" & summaryrow - 1).Interior.ColorIndex = 4
+        End If
+        
+        'Report and save percent change
+        If openprice > 0 Then
+            percentchange = (closeprice - openprice) / openprice
+            ws.Range("K" & summaryrow - 1).Value = percentchange
+        Else
+            percentchange = 0
+            ws.Range("K" & summaryrow - 1).Value = percentchange
+        End If
+        
+        'Report the totalvolume
+        ws.Range("L" & summaryrow - 1).Value = totalvolume
+        
+    Next i
+    
+    '---------------------------------------------------------
+    'Now that we're done looping through the data, let's do other stuff!
+    '---------------------------------------------------------
+    
+    'Find highest and lowest percentages
+    Set percentrange = ws.Range("K1:K" & ws.Rows.Count)
+    highpercent = Application.Max(percentrange)
+    lowpercent = Application.Min(percentrange)
+    
+    'Find the associated ticker to greatest and lowest percentage and save
+    highpercentrow = Application.Match(highpercent, percentrange, 0)
+    highticker = ws.Range("I" & highpercentrow)
+    lowpercentrow = Application.Match(lowpercent, percentrange, 0)
+    lowticker = ws.Range("I" & lowpercentrow)
+    
+    'Find greatest total volume
+    Set totalvolrange = ws.Range("L1:L" & ws.Rows.Count)
+    greatestvol = Application.Max(totalvolrange)
+    
+    'Find the associated ticker to greatest total volume and save
+    highvoltickerrow = Application.Match(greatestvol, totalvolrange, 0)
+    highvolticker = ws.Range("I" & highvoltickerrow)
+    
+    'Report greatest % increase, greatest % decrease, greatest total volume, and their associated tickers
+    ws.Range("P2").Value = highticker
+    ws.Range("Q2").Value = highpercent
+    ws.Range("P3").Value = lowticker
+    ws.Range("Q3").Value = lowpercent
+    ws.Range("P4").Value = highvolticker
+    ws.Range("Q4").Value = greatestvol
+
+Next ws
+End Sub
